@@ -27,9 +27,10 @@ def val(model, dataloader):
         accuracy.append(metrics.accuracy_score(y_true=np.array(target_batch.numpy()), y_pred=preds))
     accuracy = np.mean(accuracy)
     loss = np.mean(loss)
+    state = model.make_state()
     model.writer.add_scalars("Validation", {'loss': loss, 'accuracy': accuracy}, model.counter['batches'])
     model.update_learning_rate(loss)
-    model.early_stopping(loss)
+    model.early_stopping(loss, state)
     
 def get_value(tensor):
     return tensor.detach().cpu().numpy()
