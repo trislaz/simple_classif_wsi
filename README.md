@@ -7,5 +7,8 @@ Baseline for MIL algos.
 v1.0 :
 
 *   Classifier : ResNet
-*   DataLoader
-*   
+*   DataLoader - Augmentation :
+    * RandomRotate
+    * RandomFlip - horizontal & vertical
+    * ColorJitter & RandomAffine ??
+
