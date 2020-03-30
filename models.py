@@ -14,9 +14,9 @@ class ResNet18(Model):
         super(ResNet18, self).__init__(args, device)
         self.network = models.resnet18()
         self.network.fc = torch.nn.Linear(in_features=512, out_features=2)
-        self.network.to(self.device)
+        self.network = self.network.to(self.device)
         self.criterion = torch.nn.CrossEntropyLoss()
-        self.writer = SummaryWriter('./')
+        self.writer = SummaryWriter(self.get_folder_writer())
         optimizer = torch.optim.Adam(self.network.parameters())
         self.optimizers = [optimizer]
         self.get_schedulers()
@@ -31,15 +31,17 @@ class ResNet18(Model):
         return loss
 
     def forward(self, x):
-        return self.network(x)
+        out = self.network(x)
+        return out
     
     def predict(self, x):
+        x = x.to(self.device)
         output = self.forward(x)
         proba = torch.nn.functional.softmax(output, dim=1)
         _, preds = torch.max(proba, dim=1)
         proba_positif = proba[:,1]
-        assert [round(x) for x in proba_positif.detach().numpy()] == list(preds)
-        return output, np.array(preds.detach().numpy())
+        assert [round(x) for x in proba_positif.detach().cpu().numpy()] == list(preds)
+        return output, np.array(preds.detach().cpu().numpy())
 
     def make_state(self):
         dictio = {'state_dict': self.network.state_dict(),

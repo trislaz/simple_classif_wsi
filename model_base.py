@@ -3,6 +3,7 @@ import torch
 import torchvision
 from abc import ABC, abstractmethod
 import shutil
+import os
 
 
 class Model(ABC):
@@ -27,6 +28,13 @@ class Model(ABC):
     def make_state(self):
         pass
 
+    def get_folder_writer(self):
+        if 'EVENTS_TF_FOLDER' in os.environ:
+            directory = os.environ['EVENTS_TF_FOLDER']
+        else:
+            directory = None
+        return directory
+
     def get_schedulers(self):
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau
         self.schedulers = [scheduler(optimizer=o, patience=100) for o in self.optimizers]
@@ -49,6 +57,7 @@ class Model(ABC):
         for optimizer in optimizers:
             if optimizer is not None:
                 optimizer.zero_grad()
+
 
 
 class EarlyStopping:

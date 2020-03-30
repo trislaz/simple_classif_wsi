@@ -17,8 +17,8 @@ import pandas as pd
 # MacOS Binaries dont support CUDA, install from source if CUDA is neededu
 
 def make_loaders(args):
-    dataset_train = fromWsi(path_wsi=args.wsi, path_xml=args.xml, n_patches_per_wsi=args.n_sample, table_data=args.table_data, color_aug=args.color_aug)
-    dataset_val = fromWsi(path_wsi=args.wsi, path_xml=args.xml, n_patches_per_wsi=args.n_sample, table_data=args.table_data, train=False)
+    dataset_train = fromWsi(path_wsi=args.wsi, path_xml=args.xml, n_patches_per_wsi=args.n_sample, table_data=args.table_data, color_aug=args.color_aug, resolution=args.resolution)
+    dataset_val = fromWsi(path_wsi=args.wsi, path_xml=args.xml, n_patches_per_wsi=args.n_sample, table_data=args.table_data, train=False, resolution=args.resolution)
     dataset_train.get_transform()
     dataset_val.get_transform()
     indices = list(range(len(dataset_train)))
@@ -31,8 +31,8 @@ def make_loaders(args):
     val_sampler = SubsetRandomSampler(val_indices)
     train_sampler = SubsetRandomSampler(train_indices)
 
-    dataloader_train = DataLoader(dataset=dataset_train, batch_size=args.batch_size, sampler=train_sampler)
-    dataloader_val = DataLoader(dataset=dataset_val, batch_size=args.batch_size, sampler=val_sampler)
+    dataloader_train = DataLoader(dataset=dataset_train, batch_size=args.batch_size, sampler=train_sampler, num_workers=4)
+    dataloader_val = DataLoader(dataset=dataset_val, batch_size=args.batch_size, sampler=val_sampler, num_workers=4)
     return dataloader_train, dataloader_val
 
 
@@ -80,9 +80,10 @@ def get_polygon(path_xml, label):
 #%%
 # To differentiate between train and test, maybe "build dataset and get transforms" manually, not in __init__.
 class fromWsi(Dataset):
-    def __init__(self, path_wsi, path_xml, n_patches_per_wsi,  
-                 table_data, label_xml='t', target_name='LST_status', color_aug=False, train=True):
+    def __init__(self, path_wsi, path_xml, n_patches_per_wsi, resolution, 
+                 table_data, label_xml='t', target_name='LST_status', color_aug=0, train=True):
 
+        self.resolution = resolution
         self.n_patches_per_wsi = n_patches_per_wsi
         self.train = train
         table_data = pd.read_csv(table_data)
@@ -167,7 +168,7 @@ class fromWsi(Dataset):
         xml = os.path.join(self.path_xml, name + '.xml')
         mask_function = lambda x: get_polygon(path_xml=xml, label=self.label_xml)
         para = usi.patch_sampling(slide = f, mask_level=3, mask_function=mask_function, 
-                                  sampling_method='random_patches', n_samples=self.n_patches_per_wsi)
+                                  sampling_method='random_patches', n_samples=self.n_patches_per_wsi, analyse_level=self.resolution)
         s = [f]*len(para)
         out += list(zip(s, para))       
         return out

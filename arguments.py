@@ -19,9 +19,9 @@ def get_parser():
                         help="number of patches sampled per wsi", 
                         default=1)
     parser.add_argument("--color_aug", 
-                        type=bool,
+                        type=int,
                         help="If there is color augmentation or not",
-                        default=False)
+                        default=0)
     parser.add_argument('--model', 
                         type=str,
                         help='name of the classifier model', 
@@ -42,4 +42,8 @@ def get_parser():
                         type=int,
                         help="Random seed", 
                         default=42)
+    parser.add_argument("--resolution", 
+                        type=int,
+                        help="resolution at which to sample",
+                        default=0)
     return parser

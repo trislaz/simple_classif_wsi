@@ -22,9 +22,10 @@ def val(model, dataloader):
     accuracy = []
     loss = []
     for input_batch, target_batch in dataloader:
+        target_batch = target_batch.to(model.device)
         output, preds = model.predict(input_batch)
-        loss.append(model.criterion(output, target_batch).detach().numpy())
-        accuracy.append(metrics.accuracy_score(y_true=np.array(target_batch.numpy()), y_pred=preds))
+        loss.append(model.criterion(output, target_batch).detach().cpu().numpy())
+        accuracy.append(metrics.accuracy_score(y_true=np.array(target_batch.detach().cpu().numpy()), y_pred=preds))
     accuracy = np.mean(accuracy)
     loss = np.mean(loss)
     state = model.make_state()
