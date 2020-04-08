@@ -115,8 +115,8 @@ class fromWsi(Dataset):
                 transform = transforms.Compose([
                     transforms.RandomHorizontalFlip(p=0.5),
                     transforms.RandomVerticalFlip(p=0.5),
-                    transforms.RandomRotation(degrees=180),
-                    transforms.RandomApply([transforms.ColorJitter(0.3, 0.3, 0.3)], p=0.5),
+                    #transforms.RandomRotation(degrees=180),
+                    transforms.RandomApply([transforms.ColorJitter(0.6, 0.6, 0.6)], p=0.5),
                     transforms.RandomGrayscale(p=0.1),
                     transforms.ToTensor()
                 ])
@@ -124,9 +124,10 @@ class fromWsi(Dataset):
                 transform = transforms.Compose([
                     transforms.RandomHorizontalFlip(p=0.5),
                     transforms.RandomVerticalFlip(p=0.5),
-                    transforms.RandomRotation(degrees=180),
+                    #transforms.RandomRotation(degrees=180),
                     transforms.ToTensor()
                 ])
+
         else:
             transform = transforms.Compose([transforms.ToTensor()])
         self.transform = transform
@@ -257,12 +258,19 @@ class fromWsi(Dataset):
 
 #ds = fromWsi(path_wsi='data_test/images', path_xml='data_test/annots', 
 #           n_patches_per_wsi=10, label_xml='t', table_data='data_test/labels_tcga_tnbc.csv')
-           
+ds = fromWsi(path_wsi='/mnt/data4/tlazard/data/tcga_tnbc/images', path_xml='/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume', 
+           n_patches_per_wsi=10, label_xml='t', table_data='/mnt/data4/tlazard/data/tcga_tnbc/sample_labels.csv', resolution=0)           
 #indices = np.arange(len(ds))
 #val_indices = indices[:len(ds)//5]
 #train_indices = indices[len(ds)//5:]
 #ds_train = Subset(ds, indices=train_indices)
-#ds_val = Subset(ds, indices=val_indices)
+#ds_val = Subset(#ds, indices=val_indices)
 #ds_train.get_transform()
 #ds_val.train = False
 #ds_val.get_transform()
+
+
+# %%
+
+
+# %%

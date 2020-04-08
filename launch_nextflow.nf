@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 params.PROJECT_NAME = "tcga_tnbc"
-params.PROJECT_VERSION = "simple_classif"
+params.PROJECT_VERSION = "simple_classif_repeat_experiment"
 params.resolution = "2"
 params.y_interest = "LST_status"
 model = "resnet18"
@@ -10,16 +10,16 @@ model = "resnet18"
 project_folder  = "./outputs/${params.PROJECT_NAME}_${params.PROJECT_VERSION}"
 
 // Arguments
-repeat = [1]
+//repeat = [1, ]
 wsi = "/mnt/data4/tlazard/data/tcga_tnbc/images/"
 xml = "/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume/"
 table_data = "/mnt/data4/tlazard/data/tcga_tnbc/labels_tcga_tnbc.csv"
-resolution = [0, 1, 2]
-n_sample = [1, 5, 10]
-color_aug = [0, 1]
-epochs = 500
+resolution = [1, 2]
+n_sample = [1]
+color_aug = [0]
+epochs = 2000
 batch_size = 32
-patience = 50
+patience = 150
 
 process Training {
     publishDir "${output_model_folder}", pattern: "*.pt.tar", overwrite: true
@@ -29,13 +29,13 @@ process Training {
     maxRetries 6
     cpus 5
     queue 'gpu-cbio'
-    maxForks 5
+    maxForks 6
     clusterOptions "--gres=gpu:1"
     // scratch true
     stageInMode 'copy'
 
     input:
-    val rep from repeat 
+    val rep from 1..25 
     each r from resolution
     each sample from n_sample
     each c_aug from color_aug
@@ -45,8 +45,8 @@ process Training {
 
     script:
     python_script = file("./train.py")
-    output_model_folder = file("${project_folder}/${model}_R_${r}_nsample_${sample}_caug_${c_aug}/models/")
-    tf_folder = file("${project_folder}/${model}_R_${r}_nsample_${sample}_caug_${c_aug}/results/")
+    output_model_folder = file("${project_folder}/${model}_R_${r}_nsample_${sample}_caug_${c_aug}/rep_${rep}/models/")
+    tf_folder = file("${project_folder}/${model}_R_${r}_nsample_${sample}_caug_${c_aug}/rep_${rep}/results/")
     tf_folder.mkdir()
 
     """
