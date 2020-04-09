@@ -14,7 +14,6 @@ import pandas as pd
 ##
 # Garder en tete que l'attribution 0/1 à la target est aléatoire. Parfaitement symétrique dans ce cas ! De même dans le dataset MIL ??
 ##
-# MacOS Binaries dont support CUDA, install from source if CUDA is neededu
 
 def make_loaders(args):
     dataset_train = fromWsi(path_wsi=args.wsi, path_xml=args.xml, n_patches_per_wsi=args.n_sample, table_data=args.table_data, color_aug=args.color_aug, resolution=args.resolution)
@@ -98,7 +97,7 @@ class fromWsi(Dataset):
         self.color_aug = color_aug
         self.para_patches, self.targets = self.build_dataset()
         self.transform = None
-        
+
     def get_transform(self):
         """Transforms the images to augment the dataset
         Default transformations are randomrotations and flip
@@ -116,7 +115,7 @@ class fromWsi(Dataset):
                     transforms.RandomHorizontalFlip(p=0.5),
                     transforms.RandomVerticalFlip(p=0.5),
                     #transforms.RandomRotation(degrees=180),
-                    transforms.RandomApply([transforms.ColorJitter(0.6, 0.6, 0.6)], p=0.5),
+                    transforms.RandomApply([transforms.ColorJitter(0.5, 0.5, 0.5)], p=0.5),
                     transforms.RandomGrayscale(p=0.1),
                     transforms.ToTensor()
                 ])
@@ -168,7 +167,7 @@ class fromWsi(Dataset):
         name, _ = os.path.splitext(os.path.basename(f))
         xml = os.path.join(self.path_xml, name + '.xml')
         mask_function = lambda x: get_polygon(path_xml=xml, label=self.label_xml)
-        para = usi.patch_sampling(slide = f, mask_level=3, mask_function=mask_function, 
+        para = usi.patch_sampling(slide = f, mask_level=3, mask_function=mask_function, mask_tolerance=0.2, patch_size=(256, 256),
                                   sampling_method='random_patches', n_samples=self.n_patches_per_wsi, analyse_level=self.resolution)
         s = [f]*len(para)
         out += list(zip(s, para))       
@@ -256,10 +255,10 @@ class fromWsi(Dataset):
         image = self.transform(image)
         return image, self.targets[idx] 
 
-#ds = fromWsi(path_wsi='data_test/images', path_xml='data_test/annots', 
+#ds = fromWsi(path_wsi='data_test/images', path_xml='data_test/annots',resolution=0, 
 #           n_patches_per_wsi=10, label_xml='t', table_data='data_test/labels_tcga_tnbc.csv')
-ds = fromWsi(path_wsi='/mnt/data4/tlazard/data/tcga_tnbc/images', path_xml='/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume', 
-           n_patches_per_wsi=10, label_xml='t', table_data='/mnt/data4/tlazard/data/tcga_tnbc/sample_labels.csv', resolution=0)           
+#ds = fromWsi(path_wsi='/mnt/data4/tlazard/data/tcga_tnbc/images', path_xml='/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume', 
+#           n_patches_per_wsi=10, label_xml='t', table_data='/mnt/data4/tlazard/data/tcga_tnbc/sample_labels.csv', resolution=0)           
 #indices = np.arange(len(ds))
 #val_indices = indices[:len(ds)//5]
 #train_indices = indices[len(ds)//5:]

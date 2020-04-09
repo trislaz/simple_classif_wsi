@@ -8,7 +8,7 @@ import os
 
 class Model(ABC):
 
-    def __init__(self, args, device):
+    def __init__(self, args):
 
         self.args = args
         self.optimizers = []
@@ -18,7 +18,8 @@ class Model(ABC):
         self.counter = {'epochs': 0, 'batches': 0}
         self.network = torch.nn.Module()
         self.early_stopping = EarlyStopping(args=args)
-        self.device = device
+        self.device = args.device
+        self.dataset = None
 
     @abstractmethod
     def optimize_parameters(self, input_batch, target_batch):
@@ -37,7 +38,7 @@ class Model(ABC):
 
     def get_schedulers(self):
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau
-        self.schedulers = [scheduler(optimizer=o, patience=100) for o in self.optimizers]
+        self.schedulers = [scheduler(optimizer=o, patience=50) for o in self.optimizers]
 
     def update_learning_rate(self, metric):
         for sch in self.schedulers:

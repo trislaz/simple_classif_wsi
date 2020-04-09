@@ -4,17 +4,13 @@ import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 
-def instanciate_model(args, device):
-    if args.model == 'resnet18':
-        model = ResNet18(args, device)
-    return model
-
-class ResNet18(Model):
-    def __init__(self, args, device):
-        super(ResNet18, self).__init__(args, device)
-        self.network = models.resnet18()
-        self.network.fc = torch.nn.Linear(in_features=512, out_features=2)
-        self.network = self.network.to(self.device)
+class Classifier(Model):
+    def __init__(self, args):
+        super(Classifier, self).__init__(args)
+        self.model_name = args.model_name
+        self.pretrained = args.pretrained
+        self.frozen = args.frozen
+        self.network = self.get_network()
         self.criterion = torch.nn.CrossEntropyLoss()
         self.writer = SummaryWriter(self.get_folder_writer())
         optimizer = torch.optim.Adam(self.network.parameters())
@@ -43,9 +39,27 @@ class ResNet18(Model):
         assert [round(x) for x in proba_positif.detach().cpu().numpy()] == list(preds)
         return output, np.array(preds.detach().cpu().numpy())
 
+    def get_network(self):
+        networks ={
+            "resnet18": (models.resnet18(pretrained=self.pretrained), 512),
+            "resnet50": (models.resnet50(pretrained=self.pretrained), 2048)
+        }
+        network, in_features = networks[self.model_name]
+        network.fc = torch.nn.Linear(in_features=in_features, out_features=2)
+        if self.frozen:
+            self.freeze_net(network)
+        network = network.to(self.device)
+        return network
+
+    def freeze_net(self, net):
+        for name, p in net.named_parameters:
+            if 'fc' not in name:
+                p.requires_grad = False
+
     def make_state(self):
         dictio = {'state_dict': self.network.state_dict(),
                   'state_dict_optimizer': self.optimizers[0].state_dict, 
                   'state_scheduler': self.schedulers[0].state_dict(), 
-                  'inner_counter': self.counter}
+                  'inner_counter': self.counter,
+                  'dataset': self.dataset}
         return dictio

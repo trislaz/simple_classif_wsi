@@ -1,10 +1,8 @@
 #!/usr/bin/env nextflow
 
 params.PROJECT_NAME = "tcga_tnbc"
-params.PROJECT_VERSION = "simple_classif_repeat_experiment"
-params.resolution = "2"
+params.PROJECT_VERSION = "pretrained_resnets"
 params.y_interest = "LST_status"
-model = "resnet18"
 
 // Folders
 project_folder  = "./outputs/${params.PROJECT_NAME}_${params.PROJECT_VERSION}"
@@ -14,12 +12,19 @@ project_folder  = "./outputs/${params.PROJECT_NAME}_${params.PROJECT_VERSION}"
 wsi = "/mnt/data4/tlazard/data/tcga_tnbc/images/"
 xml = "/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume/"
 table_data = "/mnt/data4/tlazard/data/tcga_tnbc/labels_tcga_tnbc.csv"
-resolution = [1, 2]
-n_sample = [1]
-color_aug = [0]
+
+// Experimental parameters
+resolution = Channel.from([0, 1, 2])
+n_sample = Channel.from([50, 10, 1])
+para = resolution .merge (n_sample)
+models = ['resnet18', 'resnet50']
+freeze = [0, 1]
+pretrained = 1
+c_aug = 0 
 epochs = 2000
 batch_size = 32
 patience = 150
+repeat = 1..10
 
 process Training {
     publishDir "${output_model_folder}", pattern: "*.pt.tar", overwrite: true
@@ -29,24 +34,24 @@ process Training {
     maxRetries 6
     cpus 5
     queue 'gpu-cbio'
-    maxForks 6
+    maxForks 5
     clusterOptions "--gres=gpu:1"
     // scratch true
     stageInMode 'copy'
 
     input:
-    val rep from 1..25 
-    each r from resolution
-    each sample from n_sample
-    each c_aug from color_aug
+    tuple val(r), val(sample) from para
+    each rep from repeat
+    each frozen from freeze
+    each model_name from models
 
     output:
     file("*.pt.tar")
 
     script:
     python_script = file("./train.py")
-    output_model_folder = file("${project_folder}/${model}_R_${r}_nsample_${sample}_caug_${c_aug}/rep_${rep}/models/")
-    tf_folder = file("${project_folder}/${model}_R_${r}_nsample_${sample}_caug_${c_aug}/rep_${rep}/results/")
+    output_model_folder = file("${project_folder}/${model}/R_${r}/frozen_$frozen/rep_${rep}/models/")
+    tf_folder = file("${project_folder}/${model}/R_${r}/frozen_$frozen/rep_${rep}/results/")
     tf_folder.mkdir()
 
     """
@@ -60,8 +65,10 @@ process Training {
                           --patience $patience \
                           --color_aug $c_aug \
                           --resolution $r \
-                          --model $model \
+                          --model_name $model_name \
                           --n_sample $sample \
+                          --pretrained $pretrained \
+                          --frozen $frozen
     """
 }
 

@@ -22,10 +22,6 @@ def get_parser():
                         type=int,
                         help="If there is color augmentation or not",
                         default=0)
-    parser.add_argument('--model', 
-                        type=str,
-                        help='name of the classifier model', 
-                        default='resnet18')
     parser.add_argument("--epochs", 
                         type=int,
                         help="number of epochs to train",
@@ -38,12 +34,20 @@ def get_parser():
                         type=int,
                         help="Number of epochs without improvements before stopping",
                         default=5)
-    parser.add_argument("--seed", 
-                        type=int,
-                        help="Random seed", 
-                        default=42)
     parser.add_argument("--resolution", 
                         type=int,
                         help="resolution at which to sample",
+                        default=0)
+    parser.add_argument('--model_name',
+                        type=str,
+                        help='Name of the network to use: resnet18 | resnet50',
+                        default='resnet18')
+    parser.add_argument('--pretrained',
+                        type=int,
+                        help='If >=1 loads the weights trained on imagenet',
+                        default=0)
+    parser.add_argument('--frozen',
+                        type=int,
+                        help='If >= 1, freeze the network except fc layer',
                         default=0)
     return parser
