@@ -50,8 +50,8 @@ process Training {
 
     script:
     python_script = file("./train.py")
-    output_model_folder = file("${project_folder}/${model}/R_${r}/frozen_$frozen/rep_${rep}/models/")
-    tf_folder = file("${project_folder}/${model}/R_${r}/frozen_$frozen/rep_${rep}/results/")
+    output_model_folder = file("${project_folder}/${model_name}/R_${r}/frozen_$frozen/rep_${rep}/models/")
+    tf_folder = file("${project_folder}/${model_name}/R_${r}/frozen_$frozen/rep_${rep}/results/")
     tf_folder.mkdir()
 
     """

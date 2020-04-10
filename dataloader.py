@@ -30,8 +30,8 @@ def make_loaders(args):
     val_sampler = SubsetRandomSampler(val_indices)
     train_sampler = SubsetRandomSampler(train_indices)
 
-    dataloader_train = DataLoader(dataset=dataset_train, batch_size=args.batch_size, sampler=train_sampler, num_workers=4)
-    dataloader_val = DataLoader(dataset=dataset_val, batch_size=args.batch_size, sampler=val_sampler, num_workers=4)
+    dataloader_train = DataLoader(dataset=dataset_train, batch_size=args.batch_size, sampler=train_sampler, num_workers=24)
+    dataloader_val = DataLoader(dataset=dataset_val, batch_size=args.batch_size, sampler=val_sampler, num_workers=24)
     return dataloader_train, dataloader_val
 
 

@@ -46,7 +46,7 @@ def main():
     # Initialize dataloader Creates 2 dataset : Careful, if I want to load all in memory ill have to change that, to have only one dataset.
     dataloader_train, dataloader_val = make_loaders(args=args)
     model = Classifier(args=args)
-    model.dataset = dataloader_train.dataset.para_paches
+    model.dataset = dataloader_train.dataset.para_patches
 
     while model.counter['epochs'] < args.epochs:
         print("Begin training")
