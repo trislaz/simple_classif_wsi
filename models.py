@@ -52,7 +52,7 @@ class Classifier(Model):
         return network
 
     def freeze_net(self, net):
-        for name, p in net.named_parameters:
+        for name, p in net.named_parameters():
             if 'fc' not in name:
                 p.requires_grad = False
 

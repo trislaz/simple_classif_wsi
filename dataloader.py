@@ -1,5 +1,6 @@
 # %%
 from torch.utils.data import Dataset, SubsetRandomSampler, DataLoader
+from PIL import Image
 from torchvision import transforms 
 import useful_wsi as usi
 from glob import glob
@@ -63,20 +64,6 @@ def get_polygon(path_xml, label):
         mask[rr, cc] = 1
     return mask
 
-#ask_level = 3
-#path_xml = 'data_test/image_tcga_2.xml'
-#path_wsi = 'data_test/image_tcga_2.svs'
-#def mask_funcion(image):
-#    _ = image
-#    mask = get_polygon(path_xml=path_xml, label='t')
-#    return mask
-#slide = usi.utils.open_image(path_wsi)
-#para = usi.patch_sampling(slide = path_wsi, mask_level=3, mask_function=mask_funcion, sampling_method='random_patches', n_samples=4)
-#im = usi.get_image(path_wsi, para[0], numpy=False)
-#def get_patches(path_wsi, path_xml, patches_per_wsi):
-
-
-#%%
 # To differentiate between train and test, maybe "build dataset and get transforms" manually, not in __init__.
 class fromWsi(Dataset):
     def __init__(self, path_wsi, path_xml, n_patches_per_wsi, resolution, 
@@ -255,21 +242,66 @@ class fromWsi(Dataset):
         image = self.transform(image)
         return image, self.targets[idx] 
 
-#ds = fromWsi(path_wsi='data_test/images', path_xml='data_test/annots',resolution=0, 
-#           n_patches_per_wsi=10, label_xml='t', table_data='data_test/labels_tcga_tnbc.csv')
 #ds = fromWsi(path_wsi='/mnt/data4/tlazard/data/tcga_tnbc/images', path_xml='/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume', 
 #           n_patches_per_wsi=10, label_xml='t', table_data='/mnt/data4/tlazard/data/tcga_tnbc/sample_labels.csv', resolution=0)           
-#indices = np.arange(len(ds))
-#val_indices = indices[:len(ds)//5]
-#train_indices = indices[len(ds)//5:]
-#ds_train = Subset(ds, indices=train_indices)
-#ds_val = Subset(#ds, indices=val_indices)
-#ds_train.get_transform()
-#ds_val.train = False
-#ds_val.get_transform()
 
+class dataset(Dataset):
+    imext = set(['.png', '.jpg'])
+    def __init__(self, args, transform=None):
+        self.path = args.path
+        self.transform = args.transform
+        self.table_data = pd.read_csv(args.table_data)
+        self.labels = args.labels #Ajouter l'extraction du label de la table_name.
+        self.target_dict = dict()
+        self.imext = set(['.png', '.jpg'])
+        self.files = self._collect_files(args.path)
+        self.transform = transform
+    
+    def _collect_file_path(self, path):
+        """Creates a list of all path to the images.
+        """
+        out = []
+        files = os.listdir(path)
+        files = [os.path.splitext(x) for x in files]
+        for name, ext in files:
+            if ext in self.imext:
+                out.append((os.path.join(path, name+ext), path))  
+        return out 
 
-# %%
+   def make_target_dict(self, slide):
+        """extracts targets of f from the table_data
+        
+        Parameters
+        ----------
+        slide : str
+            name of the slide
+        """
+        target = self.table_data[self.table_data['ID'] == p]['target'].values[0]
+        self.target _dict[p] = target
+        return None
+    
+    def _collect_files(self, path):
+        return self._collect_file_path(path)
 
+    def __len__(self):
+        return len(self.files)
 
-# %%
+    def __getitem__(self, idx):
+        impath, slide_path = self.files[idx]
+        image = Image.open(impath)
+        name_slide = os.path.basename(slide_path)
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, self.target_dict[name_slide]
+
+class datasetWSI_simple(dataset):
+    def __init__(self, path, transform=None):
+        super(datasetWSI_simple, self).__init__(path, transform)
+
+    def _collect_files(self, path):
+        out = []
+        paths = glob(os.path.join(path, '*'))
+        for p in paths:
+            self.make_target_dict(os.path.basename(p))
+            out += self._collect_file_path(p)
+        return out
