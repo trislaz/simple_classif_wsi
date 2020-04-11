@@ -16,11 +16,10 @@ import pandas as pd
 # Garder en tete que l'attribution 0/1 à la target est aléatoire. Parfaitement symétrique dans ce cas ! De même dans le dataset MIL ??
 ##
 
+# Use 
 def make_loaders(args):
-    dataset_train = fromWsi(path_wsi=args.wsi, path_xml=args.xml, n_patches_per_wsi=args.n_sample, table_data=args.table_data, color_aug=args.color_aug, resolution=args.resolution)
-    dataset_val = fromWsi(path_wsi=args.wsi, path_xml=args.xml, n_patches_per_wsi=args.n_sample, table_data=args.table_data, train=False, resolution=args.resolution)
-    dataset_train.get_transform()
-    dataset_val.get_transform()
+    dataset_train = datasetWSI_simple(args=args, transform=get_transform(train=True, color_aug=args.color_aug))
+    dataset_val = datasetWSI_simple(args=args, transform=get_transform(train=False))
     indices = list(range(len(dataset_train)))
     split = len(dataset_train) // 3
 
@@ -102,7 +101,7 @@ class fromWsi(Dataset):
                     transforms.RandomHorizontalFlip(p=0.5),
                     transforms.RandomVerticalFlip(p=0.5),
                     #transforms.RandomRotation(degrees=180),
-                    transforms.RandomApply([transforms.ColorJitter(0.5, 0.5, 0.5)], p=0.5),
+                    transforms.RandomApply([transforms.ColorJitter(0.3, 0.3, 0.3)], p=0.5),
                     transforms.RandomGrayscale(p=0.1),
                     transforms.ToTensor()
                 ])
@@ -248,13 +247,13 @@ class fromWsi(Dataset):
 class dataset(Dataset):
     imext = set(['.png', '.jpg'])
     def __init__(self, args, transform=None):
-        self.path = args.path
-        self.transform = args.transform
+        self.path = args.wsi
+        self.transform = transform
+        self.n_sample = args.n_sample
         self.table_data = pd.read_csv(args.table_data)
-        self.labels = args.labels #Ajouter l'extraction du label de la table_name.
         self.target_dict = dict()
         self.imext = set(['.png', '.jpg'])
-        self.files = self._collect_files(args.path)
+        self.files = self._collect_files(args.wsi)
         self.transform = transform
     
     def _collect_file_path(self, path):
@@ -268,7 +267,7 @@ class dataset(Dataset):
                 out.append((os.path.join(path, name+ext), path))  
         return out 
 
-   def make_target_dict(self, slide):
+    def make_target_dict(self, slide):
         """extracts targets of f from the table_data
         
         Parameters
@@ -276,8 +275,8 @@ class dataset(Dataset):
         slide : str
             name of the slide
         """
-        target = self.table_data[self.table_data['ID'] == p]['target'].values[0]
-        self.target _dict[p] = target
+        target = self.table_data[self.table_data['ID'] == slide]['target'].values[0]
+        self.target_dict[slide] = target
         return None
     
     def _collect_files(self, path):
@@ -295,13 +294,32 @@ class dataset(Dataset):
         return image, self.target_dict[name_slide]
 
 class datasetWSI_simple(dataset):
-    def __init__(self, path, transform=None):
-        super(datasetWSI_simple, self).__init__(path, transform)
+    def __init__(self, args, transform=None):
+        super(datasetWSI_simple, self).__init__(args, transform)
 
     def _collect_files(self, path):
         out = []
         paths = glob(os.path.join(path, '*'))
         for p in paths:
             self.make_target_dict(os.path.basename(p))
-            out += self._collect_file_path(p)
+            out += np.random.choice(self._collect_file_path(p), self.n_sample) 
         return out
+
+def get_transform(train, color_aug=False):
+    if train:
+        if color_aug:
+            transform = transforms.Compose([
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomVerticalFlip(p=0.5),
+                transforms.RandomApply([transforms.ColorJitter(0.3, 0.3, 0.3)], p=0.5),
+                transforms.RandomGrayscale(p=0.1),
+                transforms.ToTensor()])
+        else:
+            transform = transforms.Compose([
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomVerticalFlip(p=0.5),
+                transforms.ToTensor()])
+    else:
+        transform = transforms.ToTensor()
+    return transform
+ 

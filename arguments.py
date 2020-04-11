@@ -9,7 +9,7 @@ def get_parser():
     parser.add_argument("--xml", 
                         type=str, 
                         help="path to the xml folder", 
-                        required=True)
+                        default='.')
     parser.add_argument("--table_data", 
                         type=str,
                         help="path to the table_data.csv", 
