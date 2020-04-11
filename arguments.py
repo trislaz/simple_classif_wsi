@@ -22,6 +22,10 @@ def get_parser():
                         type=int,
                         help="If there is color augmentation or not",
                         default=0)
+    parser.add_argument("--seed", 
+                        type=int,
+                        help="seed for random number generator",
+                        default=42)
     parser.add_argument("--epochs", 
                         type=int,
                         help="number of epochs to train",
