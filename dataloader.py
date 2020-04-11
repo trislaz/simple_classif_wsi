@@ -254,7 +254,7 @@ class dataset(Dataset):
         self.target_dict = dict()
         self.imext = set(['.png', '.jpg'])
         self.files = self._collect_files(args.wsi)
-        self.transform = transform
+        
     
     def _collect_file_path(self, path):
         """Creates a list of all path to the images.
@@ -280,10 +280,22 @@ class dataset(Dataset):
         return None
     
     def _collect_files(self, path):
+        self.transform_target()
         return self._collect_file_path(path)
 
     def __len__(self):
         return len(self.files)
+
+    def transform_target(self):
+        """Adds to table to self.table_data
+        a numerical encoding of the target. Works for classif.
+        New columns is named "target"
+        """
+        table = self.table_data
+        T = pd.factorize(table[self.target_name])
+        table['target'] = T[0]
+        self.target_correspondance = T[1]
+        self.table_data = table
 
     def __getitem__(self, idx):
         impath, slide_path = self.files[idx]
