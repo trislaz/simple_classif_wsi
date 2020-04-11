@@ -9,8 +9,8 @@ project_folder  = "./outputs/${params.PROJECT_NAME}_${params.PROJECT_VERSION}"
 
 // Arguments
 //repeat = [1, ]
-wsi = "/mnt/data4/tlazard/data/tcga_tnbc/images/"
-xml = "/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume/"
+//wsi = "/mnt/data4/tlazard/data/tcga_tnbc/images/"
+//xml = "/mnt/data4/tlazard/data/tcga_tnbc/annotations/annotations_tcga_tnbc_guillaume/"
 table_data = "/mnt/data4/tlazard/data/tcga_tnbc/labels_tcga_tnbc.csv"
 
 // Experimental parameters
@@ -50,6 +50,7 @@ process Training {
 
     script:
     python_script = file("./train.py")
+	input_dataset = file("/mnt/data4/tlazard/data/tcga_tnbc_tiled/tcga_tnbc_simple_classif/256/res_$r/")
     output_model_folder = file("${project_folder}/${model_name}/R_${r}/frozen_$frozen/rep_${rep}/models/")
     tf_folder = file("${project_folder}/${model_name}/R_${r}/frozen_$frozen/rep_${rep}/results/")
     tf_folder.mkdir()
@@ -57,8 +58,7 @@ process Training {
     """
     export EVENTS_TF_FOLDER=${tf_folder}
     module load cuda10.0
-    python $python_script --wsi $wsi \
-                          --xml $xml \
+    python $python_script --wsi ${input_dataset} \
                           --table_data $table_data \
                           --batch_size $batch_size \
                           --epochs $epochs \
