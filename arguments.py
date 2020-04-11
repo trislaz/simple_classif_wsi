@@ -9,7 +9,7 @@ def get_parser():
     parser.add_argument("--xml", 
                         type=str, 
                         help="path to the xml folder", 
-                        required=True)
+                        default='.')
     parser.add_argument("--table_data", 
                         type=str,
                         help="path to the table_data.csv", 
@@ -50,4 +50,5 @@ def get_parser():
                         type=int,
                         help='If >= 1, freeze the network except fc layer',
                         default=0)
+    
     return parser
