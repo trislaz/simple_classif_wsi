@@ -39,14 +39,16 @@ def get_value(tensor):
 
 def main():
     args = get_parser().parse_args()
+    # Arguments by hand
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    args.target_name = "LST_status"
 
     # Initilize device
 
     # Initialize dataloader Creates 2 dataset : Careful, if I want to load all in memory ill have to change that, to have only one dataset.
     dataloader_train, dataloader_val = make_loaders(args=args)
     model = Classifier(args=args)
-    model.dataset = dataloader_train.dataset.para_patches
+    model.dataset = dataloader_train.dataset.files
 
     while model.counter['epochs'] < args.epochs:
         print("Begin training")

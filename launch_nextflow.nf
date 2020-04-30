@@ -14,8 +14,8 @@ project_folder  = "./outputs/${params.PROJECT_NAME}_${params.PROJECT_VERSION}"
 table_data = "/mnt/data4/tlazard/data/tcga_tnbc/labels_tcga_tnbc.csv"
 
 // Experimental parameters
-resolution = Channel.from([0, 1, 2])
-n_sample = Channel.from([50, 10, 1])
+resolution = Channel.from([2, 1])
+n_sample = Channel.from([1, 10])
 para = resolution .merge (n_sample)
 models = ['resnet18', 'resnet50']
 freeze = [0, 1]
@@ -29,12 +29,12 @@ repeat = 1..10
 process Training {
     publishDir "${output_model_folder}", pattern: "*.pt.tar", overwrite: true
     publishDir "${output_results_folder}", pattern: "*eventsevents.*", overwrite: true
-    memory { 30.GB + 5.GB * (task.attempt - 1) }
+    memory '80GB'
     errorStrategy 'retry'
-    maxRetries 6
+    maxRetries 2
     cpus 5
     queue 'gpu-cbio'
-    maxForks 5
+    maxForks 6
     clusterOptions "--gres=gpu:1"
     // scratch true
     stageInMode 'copy'

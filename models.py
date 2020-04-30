@@ -24,6 +24,7 @@ class Classifier(Model):
         self.set_zero_grad()
         loss = self.criterion(output_batch, target_batch)
         loss.backward()
+        self.optimizers[0].step()
         return loss
 
     def forward(self, x):

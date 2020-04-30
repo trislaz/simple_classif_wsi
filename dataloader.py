@@ -249,13 +249,13 @@ class dataset(Dataset):
     def __init__(self, args, transform=None):
         self.path = args.wsi
         self.transform = transform
+        self.target_name = args.target_name
         self.n_sample = args.n_sample
         self.table_data = pd.read_csv(args.table_data)
         self.target_dict = dict()
         self.imext = set(['.png', '.jpg'])
         self.files = self._collect_files(args.wsi)
         
-    
     def _collect_file_path(self, path):
         """Creates a list of all path to the images.
         """
@@ -275,9 +275,11 @@ class dataset(Dataset):
         slide : str
             name of the slide
         """
-        target = self.table_data[self.table_data['ID'] == slide]['target'].values[0]
-        self.target_dict[slide] = target
-        return None
+        is_in_table = slide in set(self.table_data['ID'])
+        if is_in_table:
+            target = self.table_data[self.table_data['ID'] == slide]['target'].values[0]
+            self.target_dict[slide] = target
+        return is_in_table
     
     def _collect_files(self, path):
         self.transform_target()
@@ -310,11 +312,17 @@ class datasetWSI_simple(dataset):
         super(datasetWSI_simple, self).__init__(args, transform)
 
     def _collect_files(self, path):
+        """Collects all files : path is a folder full of folders, each being a wsi.
+        """
         out = []
+        self.transform_target()
         paths = glob(os.path.join(path, '*'))
         for p in paths:
-            self.make_target_dict(os.path.basename(p))
-            out += np.random.choice(self._collect_file_path(p), self.n_sample) 
+            is_in_table = self.make_target_dict(os.path.basename(p))
+            if is_in_table:
+                all_patches = self._collect_file_path(p)
+                np.random.shuffle(all_patches)
+                out += all_patches[:self.n_sample] #Randomly choose the first samples 
         return out
 
 def get_transform(train, color_aug=False):
