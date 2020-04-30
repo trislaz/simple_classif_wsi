@@ -260,6 +260,8 @@ class dataset(Dataset):
         """Creates a list of all path to the images.
         """
         out = []
+        slide = os.path.basename(path)
+        _ = self.make_target_dict(slide)
         files = os.listdir(path)
         files = [os.path.splitext(x) for x in files]
         for name, ext in files:

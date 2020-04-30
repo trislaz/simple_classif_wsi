@@ -72,7 +72,7 @@ class EarlyStopping:
         self.is_best = False
         self.filename = 'model.pt.tar'
 
-    def __call__(self, loss, state):
+    def __call__(self, loss, state, name):
 
         #####################
         ## Learning begins ##
@@ -101,9 +101,9 @@ class EarlyStopping:
             self.loss_min = loss
             self.counter = 0
         
-        self.save_checkpoint(state)
+        self.save_checkpoint(state, name)
 
-    def save_checkpoint(self, state):
-        torch.save(state, self.filename)
+    def save_checkpoint(self, state, name):
+        torch.save(state, 'model' + name + '.pt.tar')
         if self.is_best:
             shutil.copyfile(self.filename, self.filename.replace('.pt.tar','_best.pt.tar'))

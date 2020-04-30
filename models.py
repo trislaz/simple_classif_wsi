@@ -61,6 +61,5 @@ class Classifier(Model):
         dictio = {'state_dict': self.network.state_dict(),
                   'state_dict_optimizer': self.optimizers[0].state_dict, 
                   'state_scheduler': self.schedulers[0].state_dict(), 
-                  'inner_counter': self.counter,
-                  'dataset': self.dataset}
+                  'inner_counter': self.counter}
         return dictio
